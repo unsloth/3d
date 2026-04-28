@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio | Developer & Computer Engineer</title>
+    
+    <!-- Google Fonts for a sleek tech aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&family=Inter:wght@300;500;800&display=swap" rel="stylesheet">
+
+    <style>
+        /* CSS Reset & Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body, html {
+            font-family: 'Inter', sans-serif;
+            color: #ffffff;
+            background-color: #000; /* Fallback before images load */
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Fixed Background Canvas */
+        #bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            /* Prevents image from stretching improperly before JS kicks in */
+            object-fit: cover; 
+        }
+
+        /* Portfolio Content Styling */
+        main {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        section {
+            min-height: 100vh;
+            width: 100%;
+            max-width: 1000px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        /* Glassmorphism Effect for readable text over 3D background */
+        .glass-panel {
+            background: rgba(15, 15, 20, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 3rem;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            transform: translateY(-5px);
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #00f2fe, #4facfe);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        p {
+            font-size: 1.2rem;
+            line-height: 1.8;
+            color: #d1d1d1;
+            margin-bottom: 1.5rem;
+        }
+
+        .code-font {
+            font-family: 'Fira Code', monospace;
+            color: #4facfe;
+            font-size: 1rem;
+            letter-spacing: -0.5px;
+        }
+
+        .skills-container {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        .skill-tag {
+            background: rgba(79, 172, 254, 0.2);
+            border: 1px solid #4facfe;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.9rem;
+        }
+
+        /* Scroll Indicator */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0.7;
+            animation: bounce 2s infinite;
+        }
+
+        .scroll-indicator span {
+            font-family: 'Fira Code', monospace;
+            font-size: 0.8rem;
+            margin-bottom: 8px;
+        }
+
+        .arrow-down {
+            width: 20px;
+            height: 20px;
+            border-right: 2px solid white;
+            border-bottom: 2px solid white;
+            transform: rotate(45deg);
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0) translateX(-50%); }
+            40% { transform: translateY(-15px) translateX(-50%); }
+            60% { transform: translateY(-7px) translateX(-50%); }
+        }
+
+        /* Loading Screen */
+        #loader {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            transition: opacity 0.5s ease;
+        }
+
+        .progress-bar {
+            width: 200px;
+            height: 4px;
+            background: #333;
+            margin-top: 20px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        #progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #4facfe;
+            transition: width 0.1s;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Preloader -->
+    <div id="loader">
+        <h2 class="code-font">Loading 3D Engine...</h2>
+        <div class="progress-bar"><div id="progress-fill"></div></div>
+    </div>
+
+    <!-- Background Canvas -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- Portfolio Content -->
+    <main>
+        <!-- Hero Section -->
+        <section id="hero">
+            <div class="glass-panel">
+                <span class="code-font">Hello, World! I am</span>
+                <h1>Your Name</h1>
+                <p>Computer Engineer & Software Developer</p>
+                <div class="skills-container">
+                    <span class="skill-tag">System Architecture</span>
+                    <span class="skill-tag">Full-Stack Dev</span>
+                    <span class="skill-tag">3D Rendering</span>
+                </div>
+            </div>
+            <div class="scroll-indicator">
+                <span>SCROLL TO RENDER</span>
+                <div class="arrow-down"></div>
+            </div>
+        </section>
+
+        <!-- About Section -->
+        <section id="about">
+            <div class="glass-panel">
+                <h2>About Me</h2>
+                <p>I bridge the gap between hardware engineering and elegant software design. With a passion for low-level optimizations and high-level architecture, I build experiences that are as efficient as they are visually stunning.</p>
+                <p>My background in computer engineering allows me to understand the machine all the way down to the silicon, enabling me to write highly optimized code.</p>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section id="projects">
+            <div class="glass-panel">
+                <h2>Featured Work</h2>
+                <p><strong>Interactive 3D Render Engine</strong><br>
+                A custom-built rendering engine that dynamically loads frames based on user interaction (like the one running in the background right now!).</p>
+                <br>
+                <p><strong>Embedded Systems Controller</strong><br>
+                Developed a custom real-time OS micro-kernel for embedded IoT devices using C++ and Assembly.</p>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact">
+            <div class="glass-panel">
+                <h2>Initiate Handshake</h2>
+                <p>Looking for a developer who understands the full stack from hardware to the UI layer? Let's connect.</p>
+                <p class="code-font">> email: hello@yourdomain.com</p>
+                <p class="code-font">> github: github.com/yourusername</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Core Logic for Image Sequence -->
+    <script>
+        const canvas = document.getElementById("bg-canvas");
+        const context = canvas.getContext("2d");
+        const loader = document.getElementById("loader");
+        const progressFill = document.getElementById("progress-fill");
+
+        // Configuration
+        const frameCount = 256; 
+        const images =[];
+        let loadedImagesCount = 0;
+
+        // Generates the file path for each frame (ezgif-frame-001.jpg -> 256.jpg)
+        const currentFrame = index => (
+            `images/ezgif-frame-${(index + 1).toString().padStart(3, '0')}.jpg`
+        );
+
+        // Resize canvas to match screen
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            updateImage(Math.floor(getScrollFraction() * (frameCount - 1)));
+        });
+        resizeCanvas();
+
+        // Preload all images to prevent flickering and lag
+        for (let i = 0; i < frameCount; i++) {
+            const img = new Image();
+            img.src = currentFrame(i);
+            
+            img.onload = () => {
+                loadedImagesCount++;
+                progressFill.style.width = `${(loadedImagesCount / frameCount) * 100}%`;
+                
+                // Once all images are loaded, remove loading screen and draw first frame
+                if (loadedImagesCount === frameCount) {
+                    setTimeout(() => {
+                        loader.style.opacity = '0';
+                        setTimeout(() => loader.style.display = 'none', 500);
+                    }, 500);
+                    updateImage(0);
+                }
+            };
+            images.push(img);
+        }
+
+        // Draw image keeping the aspect ratio (CSS "object-fit: cover" equivalent for canvas)
+        function updateImage(index) {
+            const img = images[index];
+            if (!img || !img.complete) return;
+
+            const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+            const x = (canvas.width / 2) - (img.width / 2) * scale;
+            const y = (canvas.height / 2) - (img.height / 2) * scale;
+
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            context.drawImage(img, x, y, img.width * scale, img.height * scale);
+        }
+
+        // Calculate how far down the user has scrolled (0 to 1)
+        function getScrollFraction() {
+            const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+            return maxScroll === 0 ? 0 : scrollTop / maxScroll;
+        }
+
+        // Tie the scroll event to the frame update
+        window.addEventListener('scroll', () => {
+            requestAnimationFrame(() => {
+                // This formula distributes your 256 frames evenly across the entire length of your website content. 
+                // If you add more content/sections, it will automatically stretch the animation smoothly.
+                const scrollFraction = getScrollFraction();
+                const frameIndex = Math.min(frameCount - 1, Math.floor(scrollFraction * frameCount));
+                
+                /* Note: If you want it to EXACTLY move 1 frame per 1 literal pixel of scrolling, 
+                   comment out the two lines above and uncomment the line below. 
+                   (Be warned: 256px of scrolling is a very short flick of the mouse wheel!) */
+                   
+                // const frameIndex = Math.min(frameCount - 1, Math.floor(document.documentElement.scrollTop));
+
+                updateImage(frameIndex);
+            });
+        });
+    </script>
+</body>
+</html>
