@@ -18,16 +18,21 @@
             scroll-behavior: smooth;
         }
 
-        /* FIXED MOBILE SCALING */
-        #bg-canvas {
+        /* 
+           FOOLPROOF BACKGROUND IMAGE
+           This bypasses Canvas security blocks completely 
+        */
+        #bg-image {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
+            width: 100vw;
             height: 100vh;
-            height: 100dvh; /* Fixes mobile URL bar resize issue */
+            height: 100dvh; 
+            object-fit: cover; /* Makes the image fit perfectly like a background */
             z-index: -1;
             background-color: #111; 
+            transition: opacity 0.2s ease;
         }
 
         main {
@@ -57,10 +62,6 @@
             padding: 2rem;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
             transition: transform 0.3s ease;
-        }
-
-        .glass-panel:hover {
-            transform: translateY(-5px);
         }
 
         h1 {
@@ -104,12 +105,12 @@
 
     <!-- Loading Screen -->
     <div id="loader">
-        <h2 class="code-font">Downloading 3D Assets...</h2>
+        <h2 class="code-font">Downloading 256 Frames...</h2>
         <div class="progress-bar"><div id="progress-fill"></div></div>
     </div>
 
-    <!-- Background Canvas -->
-    <canvas id="bg-canvas"></canvas>
+    <!-- The physical image tag (Immune to Canvas Black Screen errors) -->
+    <img id="bg-image" src="https://raw.githubusercontent.com/unsloth/3d/refs/heads/main/images/ezgif-frame-001.jpg" alt="3D Render">
 
     <main>
         <section id="hero">
@@ -124,8 +125,8 @@
         <section id="about">
             <div class="glass-panel">
                 <h2>System Architecture</h2>
-                <p>By transforming my 3D renders into a pre-baked image sequence, I bypass heavy WebGL GPU processing. This custom canvas rendering engine loads 256 frames over the network and ties them to your scroll position.</p>
-                <p>It allows for high-fidelity 3D graphics that run seamlessly on low-power mobile devices.</p>
+                <p>By moving to a pure HTML DOM image replacement strategy, this background safely pulls 256 frames from GitHub and ties them dynamically to your scroll position.</p>
+                <p>It allows for high-fidelity 3D graphics that run securely and seamlessly on any device, bypassing local Canvas restrictions entirely.</p>
             </div>
         </section>
 
@@ -147,45 +148,28 @@
     </main>
 
     <script>
-        const canvas = document.getElementById("bg-canvas");
-        const context = canvas.getContext("2d");
+        const totalFrames = 256;
+        const bgImage = document.getElementById("bg-image");
         const loader = document.getElementById("loader");
         const progressFill = document.getElementById("progress-fill");
 
-        const frameCount = 256; 
-        const images =[];
-        let loadedImagesCount = 0;
-
-        // Fetches your images directly from your GitHub raw content
-        function getFramePath(index) {
-            const frameNum = (index + 1).toString().padStart(3, '0');
-            return `https://raw.githubusercontent.com/unsloth/3d/refs/heads/main/images/ezgif-frame-${frameNum}.jpg`;
+        // 1. Generate EXACT URLs
+        const imageUrls =[];
+        for (let i = 1; i <= totalFrames; i++) {
+            const frameNum = i.toString().padStart(3, '0');
+            imageUrls.push(`https://raw.githubusercontent.com/unsloth/3d/refs/heads/main/images/ezgif-frame-${frameNum}.jpg`);
         }
 
-        // Perfect Screen Fit Logic
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            
-            // Re-draw current frame when screen rotates or resizes
-            if (images.length > 0) {
-                const scrollFraction = getScrollFraction();
-                const frameIndex = Math.min(frameCount - 1, Math.floor(scrollFraction * frameCount));
-                updateImage(frameIndex);
-            }
-        }
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
+        // 2. Preload into memory so scrolling doesn't lag
+        const preloadedImages =[];
+        let loadedCount = 0;
 
-        function checkProgress() {
-            loadedImagesCount++;
-            progressFill.style.width = `${(loadedImagesCount / frameCount) * 100}%`;
+        function updateProgress() {
+            loadedCount++;
+            progressFill.style.width = `${(loadedCount / totalFrames) * 100}%`;
             
-            // Draw the first frame immediately so background isn't black
-            if (loadedImagesCount === 1) updateImage(0);
-
-            // Hide loader when done
-            if (loadedImagesCount === frameCount) {
+            // Remove loading screen when done
+            if (loadedCount >= totalFrames) {
                 setTimeout(() => {
                     loader.style.opacity = '0';
                     setTimeout(() => loader.style.display = 'none', 500);
@@ -193,55 +177,42 @@
             }
         }
 
-        // Preload images safely from GitHub
-        for (let i = 0; i < frameCount; i++) {
+        imageUrls.forEach((url, index) => {
             const img = new Image();
+            img.src = url;
             
-            // REQUIRED: Allows external GitHub images to be drawn onto the Canvas
-            img.crossOrigin = "anonymous"; 
-            
-            img.onload = checkProgress;
-            img.onerror = () => { 
-                console.error(`Failed to load: ${img.src}`);
-                checkProgress(); // Keep moving so loader doesn't freeze
+            img.onload = () => {
+                preloadedImages[index] = img; // Save completed image
+                updateProgress();
             };
-            img.src = getFramePath(i);
-            images.push(img);
-        }
-
-        function updateImage(index) {
-            const img = images[index];
-            if (!img || !img.complete || img.naturalWidth === 0) return;
-
-            // Math to simulate CSS "object-fit: cover"
-            const scale = Math.max(canvas.width / img.naturalWidth, canvas.height / img.naturalHeight);
-            const drawWidth = img.naturalWidth * scale;
-            const drawHeight = img.naturalHeight * scale;
             
-            // Center the image on the screen
-            const x = (canvas.width - drawWidth) / 2;
-            const y = (canvas.height - drawHeight) / 2;
+            // Even if a frame gets blocked by network, keep going!
+            img.onerror = () => {
+                console.error("Skipped a dropped frame: " + url);
+                updateProgress(); 
+            };
+        });
 
-            context.clearRect(0, 0, canvas.width, canvas.height);
-            context.drawImage(img, x, y, drawWidth, drawHeight);
-        }
-
-        function getScrollFraction() {
-            const scrollTop = window.scrollY || document.documentElement.scrollTop;
-            const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
-            return maxScroll <= 0 ? 0 : scrollTop / maxScroll;
-        }
-
+        // 3. Scroll Logic
         function handleScroll() {
             requestAnimationFrame(() => {
-                const scrollFraction = getScrollFraction();
-                // Maps your scroll distance dynamically over the 256 frames
-                const frameIndex = Math.min(frameCount - 1, Math.floor(scrollFraction * frameCount));
-                updateImage(frameIndex);
+                const scrollTop = window.scrollY || document.documentElement.scrollTop;
+                const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+                
+                // Prevent error if page is too short
+                if (maxScroll <= 0) return; 
+
+                // Calculate which frame we are on (0 to 255)
+                const scrollFraction = scrollTop / maxScroll;
+                const frameIndex = Math.min(totalFrames - 1, Math.floor(scrollFraction * totalFrames));
+
+                // Instantly swap the image source (only if that specific frame successfully loaded)
+                if (preloadedImages[frameIndex] && preloadedImages[frameIndex].complete) {
+                    bgImage.src = imageUrls[frameIndex];
+                }
             });
         }
 
-        // Event listeners optimized for smooth scrolling on both desktop and mobile
         window.addEventListener('scroll', handleScroll, { passive: true });
         window.addEventListener('touchmove', handleScroll, { passive: true });
     </script>
