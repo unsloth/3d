@@ -27,7 +27,7 @@
             height: 100vh;
             height: 100dvh; /* Fixes mobile URL bar resize issue */
             z-index: -1;
-            background-color: #111; /* Slight dark gray so you know it's there */
+            background-color: #111; 
         }
 
         main {
@@ -56,10 +56,15 @@
             border-radius: 20px;
             padding: 2rem;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            transition: transform 0.3s ease;
+        }
+
+        .glass-panel:hover {
+            transform: translateY(-5px);
         }
 
         h1 {
-            font-size: clamp(2.5rem, 5vw, 4rem); /* Responsive font size */
+            font-size: clamp(2.5rem, 5vw, 4rem); 
             font-weight: 800;
             margin-bottom: 0.5rem;
             background: linear-gradient(90deg, #00f2fe, #4facfe);
@@ -99,7 +104,7 @@
 
     <!-- Loading Screen -->
     <div id="loader">
-        <h2 class="code-font">Loading 3D Render...</h2>
+        <h2 class="code-font">Downloading 3D Assets...</h2>
         <div class="progress-bar"><div id="progress-fill"></div></div>
     </div>
 
@@ -111,29 +116,32 @@
             <div class="glass-panel">
                 <span class="code-font">> System.out.println("Hello, World!");</span>
                 <h1>Your Name</h1>
-                <p>Computer Engineer & 3D Developer</p>
+                <p>Computer Engineer & Software Developer</p>
                 <p class="code-font" style="margin-top:20px; opacity: 0.7;">[Scroll Down to Render Content]</p>
             </div>
         </section>
 
         <section id="about">
             <div class="glass-panel">
-                <h2>About Architecture</h2>
-                <p>By transforming my 3D renders into a pre-baked image sequence, I bypass heavy WebGL GPU processing. This canvas technique allows for high-fidelity 3D graphics that run seamlessly on low-power mobile devices.</p>
+                <h2>System Architecture</h2>
+                <p>By transforming my 3D renders into a pre-baked image sequence, I bypass heavy WebGL GPU processing. This custom canvas rendering engine loads 256 frames over the network and ties them to your scroll position.</p>
+                <p>It allows for high-fidelity 3D graphics that run seamlessly on low-power mobile devices.</p>
             </div>
         </section>
 
         <section id="projects">
             <div class="glass-panel">
-                <h2>System Capabilities</h2>
-                <p>Optimized for full-stack performance. From embedded hardware systems up to dynamic front-end animations like this background.</p>
+                <h2>Capabilities</h2>
+                <p>I build experiences that are as efficient as they are visually stunning. From low-level hardware optimizations up to dynamic front-end animations like the background running right now.</p>
             </div>
         </section>
 
         <section id="contact">
             <div class="glass-panel">
-                <h2>Ping Me</h2>
-                <p class="code-font">> email: dev@domain.com</p>
+                <h2>Initiate Handshake</h2>
+                <p>Looking for a developer who understands the full stack from the hardware layer to the UI?</p>
+                <p class="code-font">> email: dev@yourdomain.com</p>
+                <p class="code-font">> github: github.com/unsloth</p>
             </div>
         </section>
     </main>
@@ -148,12 +156,13 @@
         const images =[];
         let loadedImagesCount = 0;
 
-        // Path generator: images/ezgif-frame-001.jpg -> 256.jpg
+        // Fetches your images directly from your GitHub raw content
         function getFramePath(index) {
-            return `images/ezgif-frame-${(index + 1).toString().padStart(3, '0')}.jpg`;
+            const frameNum = (index + 1).toString().padStart(3, '0');
+            return `https://raw.githubusercontent.com/unsloth/3d/refs/heads/main/images/ezgif-frame-${frameNum}.jpg`;
         }
 
-        // PERFECT SCREEN FIT LOGIC (Mobile & Desktop)
+        // Perfect Screen Fit Logic
         function resizeCanvas() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -184,14 +193,17 @@
             }
         }
 
-        // Preload images safely
+        // Preload images safely from GitHub
         for (let i = 0; i < frameCount; i++) {
             const img = new Image();
+            
+            // REQUIRED: Allows external GitHub images to be drawn onto the Canvas
+            img.crossOrigin = "anonymous"; 
+            
             img.onload = checkProgress;
-            // IF IMAGE IS MISSING, don't freeze the screen forever on black!
             img.onerror = () => { 
-                console.error(`Image missing or named wrong: ${img.src}`);
-                checkProgress(); 
+                console.error(`Failed to load: ${img.src}`);
+                checkProgress(); // Keep moving so loader doesn't freeze
             };
             img.src = getFramePath(i);
             images.push(img);
@@ -206,7 +218,7 @@
             const drawWidth = img.naturalWidth * scale;
             const drawHeight = img.naturalHeight * scale;
             
-            // Center the image
+            // Center the image on the screen
             const x = (canvas.width - drawWidth) / 2;
             const y = (canvas.height - drawHeight) / 2;
 
@@ -223,12 +235,13 @@
         function handleScroll() {
             requestAnimationFrame(() => {
                 const scrollFraction = getScrollFraction();
+                // Maps your scroll distance dynamically over the 256 frames
                 const frameIndex = Math.min(frameCount - 1, Math.floor(scrollFraction * frameCount));
                 updateImage(frameIndex);
             });
         }
 
-        // MOBILE SCROLL EVENTS
+        // Event listeners optimized for smooth scrolling on both desktop and mobile
         window.addEventListener('scroll', handleScroll, { passive: true });
         window.addEventListener('touchmove', handleScroll, { passive: true });
     </script>
